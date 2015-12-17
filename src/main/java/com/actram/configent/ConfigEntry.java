@@ -10,9 +10,11 @@ import java.util.Objects;
 class ConfigEntry<T> {
 	private final String key;
 	private final Class<T> type;
-	private final ConfigValidator validator;
+	private final ConfigValidator<T> validator;
 
-	public ConfigEntry(String key, Class<T> type, ConfigValidator validator) {
+	private final ConfigValueChecker<T> checker = new ConfigValueChecker<>();
+
+	public ConfigEntry(String key, Class<T> type, ConfigValidator<T> validator) {
 		Objects.requireNonNull(key, "key cannot be null");
 		Objects.requireNonNull(validator, "validator cannot be null");
 		this.key = key;
@@ -20,11 +22,16 @@ class ConfigEntry<T> {
 		this.validator = validator;
 	}
 
+	public T cast(Object value) {
+		return type.cast(value);
+	}
+
 	public String getKey() {
 		return key;
 	}
 
-	public void validate(Object value) throws BadConfigValueException {
-		validator.validate(value);
+	public void validate(T value) {
+		checker.setValue(value);
+		validator.validate(checker);
 	}
 }
