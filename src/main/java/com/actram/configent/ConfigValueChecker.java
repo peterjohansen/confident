@@ -67,35 +67,16 @@ public class ConfigValueChecker<T> {
 		return this;
 	}
 
-	// /**
-	*
-
-	Checks the
-	value against
-	every element
-	in the
-	specified array.*<p>*
-	This method
-	is a convenience for
-
-	{@link #check(Consumer)}
-
-	against the*
-	elements of
-	an array.**
-	@param values the
-	array to
-	check against*
-	@param function the
-	function to
-	check the
-
-	value (first type) against a
-	 *            value in
-
-	the array (second type)
+	/**
+	 * Checks the value against every element in the specified array.
+	 * <p>
+	 * This method is a convenience for {@link #check(Consumer)} against the
+	 * elements of an array.
+	 * 
+	 * @param values the array to check against
+	 * @param function the function to check the value (first type) against a
+	 *            value in the array (second type)
 	 */
-
 	@SuppressWarnings("unchecked")
 	public <R> ConfigValueChecker<?> checkAgainst(BiConsumer<T, R> function, R... values) {
 		Objects.requireNonNull(values, "list of values cannot be null");
