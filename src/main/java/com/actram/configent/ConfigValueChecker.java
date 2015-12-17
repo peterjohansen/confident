@@ -20,6 +20,18 @@ import java.util.function.Consumer;
  * means {@link NullPointerException}s will never occur. By default {@code null}
  * -values are not allowed and will throw a {@link BadConfigValueException} if
  * checked. This can be changed by calling {@link #allowNull()}.
+ * <p>
+ * An example of a custom check to ensure the value is an even integer:
+ * 
+ * <pre>
+ * 	check(value -> {
+ * 		requireInteger();
+ * 		final int n = (Integer) value;
+ * 		if (n % != 0) {
+ * 			fail("value must be an even integer");
+ * 		}
+ * 	});
+ * </pre>
  * 
  * @author Peter André Johansen
  */
