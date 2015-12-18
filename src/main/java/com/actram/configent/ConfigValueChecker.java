@@ -47,8 +47,6 @@ public class ConfigValueChecker<T> {
 
 	/**
 	 * Specifies that the value can be {@code null}.
-	 * 
-	 * @return
 	 */
 	public ConfigValueChecker<T> allowNull() {
 		if (nullAllowed) {
@@ -174,9 +172,9 @@ public class ConfigValueChecker<T> {
 	}
 
 	/**
-	 * Requires that the value is an {@code int}.
+	 * Explicitly requires that the value is an {@code int}.
 	 */
-	public ConfigValueChecker<T> requireInteger() {
+	private ConfigValueChecker<T> requireInteger() {
 		return check(value -> {
 			try {
 				Integer.parseInt(value.toString());
@@ -311,9 +309,9 @@ public class ConfigValueChecker<T> {
 	}
 
 	/**
-	 * Requires that the value is a {@link String}.
+	 * Explicitly requires that the value is a {@link String}.
 	 */
-	public ConfigValueChecker<T> requireString() {
+	private ConfigValueChecker<T> requireString() {
 		return requireType(String.class);
 	}
 

@@ -3,6 +3,7 @@ package com.actram.configent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  *
@@ -11,22 +12,34 @@ import java.util.Objects;
  */
 public class Config {
 	private final Map<String, ConfigEntry<?>> entries = new HashMap<>();
+	private final Map<String, Supplier<?>> defaultValues = new HashMap<>();
 
-	/**
-	 * Calls {@link #addEntry(String, Class, ConfigValidator)} with a config
-	 * validator that only allows non-{@code null} values.
-	 */
-	void addEntry(String key, Class<?> type) {
-		addEntry(key, type, checker -> {});
+	Config(Map<String, ConfigEntry<?>> entries, Map<String, Supplier<?>> defaultValues) {
+		Objects.requireNonNull(entries, "entries cannot be null");
+		Objects.requireNonNull(defaultValues, "default values suppliers cannot be null");
+		this.entries.putAll(entries);
+		this.defaultValues.putAll(defaultValues);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T getValue(String key) {
+		if (!hasEntry(key)) {
+			throw new IllegalArgumentException("no config entry with key: " + key);
+		}
+		return (T) entries.get(key).cast();
+	}
+	
+	public <T> T getDefault(String key) {
+		if (!defaultValues.containsKey(key)) {
+			throw new IllegalArgumentException("no config entry with key: " + key);
+		}
+		return defaultValues.get(key).get();
 	}
 
 	/**
-	 * Adds an entry to the config. That is, the config is informed that it
-	 * contains a value with the given key and type. The specified validator
-	 * will be used to check which values are valid for this entry.
+	 * @return whether the config has an entry with the given key
 	 */
-	<T> void addEntry(String key, Class<T> type, ConfigValidator<T> validator) {
-		Objects.requireNonNull(key, "entry key cannot be null");
-		entries.put(key, new ConfigEntry<T>(type, validator));
+	public boolean hasEntry(String key) {
+		return entries.containsKey(key);
 	}
 }

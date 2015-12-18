@@ -10,9 +10,10 @@ import java.util.Objects;
  */
 class ConfigEntry<T> {
 	private final ConfigValueChecker<T> checker = new ConfigValueChecker<>();
-
 	private final Class<T> type;
 	private final ConfigValidator<T> validator;
+
+	private T value;
 
 	public ConfigEntry(Class<T> type, ConfigValidator<T> validator) {
 		Objects.requireNonNull(type, "type cannot be null");
@@ -21,8 +22,20 @@ class ConfigEntry<T> {
 		this.validator = validator;
 	}
 
-	public T cast(Object value) {
+	public T cast() {
 		return type.cast(value);
+	}
+
+	public T castDefault(T value) {
+		return type.cast(value);
+	}
+
+	public Class<T> getType() {
+		return type;
+	}
+
+	public T getValue() {
+		return value;
 	}
 
 	public void validate(T value) {
