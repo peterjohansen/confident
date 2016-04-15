@@ -7,18 +7,18 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * Checks the value of a object to ensure safe, unchecked casting at a later
- * point. All checking methods are chainable and throw a
- * {@link BadConfigValueException} if the value is invalid.
+ * Checks the value of an object to ensure safe casting at a later point. All
+ * checking methods are chainable and throw a {@link IllegalValueException} if
+ * the value is invalid.
  * <p>
  * In most cases you can perform checks using the methods that start with
  * {@code require}, but if you need to perform a custom check, you can use:
  * {@link #check(Consumer)} or the methods that start with {@code checkAgainst}
  * to check against collections.
  * <p>
- * Values that are {@code null} will automatically be handled for you, which
- * means {@link NullPointerException}s will never occur. By default {@code null}
- * -values are not allowed and will throw a {@link BadConfigValueException} if
+ * Values that are {@code null} will automatically be handled, which means
+ * {@link NullPointerException}s will never occur. By default, {@code null}
+ * -values are not allowed and will throw a {@link IllegalValueException} if
  * checked. This can be changed by calling {@link #allowNull()}.
  * <p>
  * An example of a custom check to ensure the value is an even integer:
@@ -35,20 +35,14 @@ import java.util.function.Consumer;
  * 
  * @author Peter André Johansen
  */
-public class ConfigValueChecker<T> {
+public class ValueChecker<T> {
 	private T value;
-
 	private boolean nullAllowed = false;
-
-	/**
-	 * Only allow instantiation from within this package.
-	 */
-	ConfigValueChecker() {}
 
 	/**
 	 * Specifies that the value can be {@code null}.
 	 */
-	public ConfigValueChecker<T> allowNull() {
+	public ValueChecker<T> allowNull() {
 		if (nullAllowed) {
 			throw new IllegalStateException("null values are already allowed");
 		}
@@ -60,13 +54,12 @@ public class ConfigValueChecker<T> {
 	 * Performs a custom check on the value.
 	 * <p>
 	 * <strong>Note:</strong> You can assume the value is not {@code null} in
-	 * the check. The check is performed for you and will act accordingly
-	 * depending on if {@link #allowNull()} has been called.
+	 * the check.
 	 * 
 	 * @function the function that checks the value
-	 * @throws BadConfigValueException if the value is invalid
+	 * @throws IllegalValueException if the value is invalid
 	 */
-	public ConfigValueChecker<T> check(Consumer<T> function) {
+	public ValueChecker<T> check(Consumer<T> function) {
 		Objects.requireNonNull(function, "check function cannot be null");
 		if (value != null) {
 			function.accept(value);
@@ -88,7 +81,7 @@ public class ConfigValueChecker<T> {
 	 *            value in the array (second type)
 	 */
 	@SuppressWarnings("unchecked")
-	public <R> ConfigValueChecker<?> checkAgainst(BiConsumer<T, R> function, R... values) {
+	public <R> ValueChecker<?> checkAgainst(BiConsumer<T, R> function, R... values) {
 		Objects.requireNonNull(values, "list of values cannot be null");
 		return checkAgainst(Arrays.asList(values), function);
 	}
@@ -106,7 +99,7 @@ public class ConfigValueChecker<T> {
 	 * @param function the function to check the value (first type) against a
 	 *            value in the collection (second type)
 	 */
-	public <R> ConfigValueChecker<T> checkAgainst(Collection<R> values, BiConsumer<T, R> function) {
+	public <R> ValueChecker<T> checkAgainst(Collection<R> values, BiConsumer<T, R> function) {
 		Objects.requireNonNull(values, "list of values cannot be null");
 		Objects.requireNonNull(function, "check function cannot be null");
 		if (values.size() == 0) {
@@ -121,29 +114,28 @@ public class ConfigValueChecker<T> {
 	}
 
 	/**
-	 * Throws a {@link BadConfigValueException} with the given message.
+	 * Throws an {@link IllegalValueException} with the given message.
 	 * 
 	 * @param message the exception message
-	 * @throws BadConfigValueException the
+	 * @throws IllegalValueException
 	 */
 	public void fail(String message) {
 		Objects.requireNonNull(message, "exception message cannot be null");
-		throw new BadConfigValueException(message);
+		throw new IllegalValueException(message);
 	}
 
 	/**
 	 * Calls {@link #fail(String)} with the specified formatted message.
 	 */
 	public void fail(String messageFormat, Object... args) {
-		Objects.requireNonNull(messageFormat, "exception message format cannot be null");
 		Objects.requireNonNull(args, "exception message format arguments cannot be null");
-		throw new BadConfigValueException(String.format(messageFormat, args));
+		throw new IllegalValueException(String.format(messageFormat, args));
 	}
 
 	/**
 	 * Requires that the value is a {@link Comparable}.
 	 */
-	public ConfigValueChecker<T> requireComparable() {
+	public ValueChecker<T> requireComparable() {
 		return check(value -> {
 			if (!(value instanceof Comparable<?>)) {
 				fail("value must be comparable");
@@ -154,7 +146,7 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Requires that the value is in the given collection.
 	 */
-	public ConfigValueChecker<T> requireIn(Collection<T> values) {
+	public ValueChecker<T> requireIn(Collection<T> values) {
 		return check(value -> {
 			if (!values.contains(value)) {
 				fail("value must be in the list");
@@ -166,7 +158,7 @@ public class ConfigValueChecker<T> {
 	 * Requires that the value is in the given array.
 	 */
 	@SuppressWarnings("unchecked")
-	public ConfigValueChecker<T> requireIn(T... values) {
+	public ValueChecker<T> requireIn(T... values) {
 		Objects.requireNonNull(values, "list of values cannot be null");
 		return requireNot(Arrays.asList(values));
 	}
@@ -174,7 +166,7 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Explicitly requires that the value is an {@code int}.
 	 */
-	private ConfigValueChecker<T> requireInteger() {
+	private ValueChecker<T> requireInteger() {
 		return check(value -> {
 			try {
 				Integer.parseInt(value.toString());
@@ -188,7 +180,7 @@ public class ConfigValueChecker<T> {
 	 * Requires that the value is an integer between the specified range
 	 * (inclusive on both ends).
 	 */
-	public ConfigValueChecker<T> requireIntegerBetween(int min, int max) {
+	public ValueChecker<T> requireIntegerBetween(int min, int max) {
 		return requireInteger().check(value -> {
 			if ((Integer) value < min || (Integer) value > max) {
 				fail("value must be an integer between or equal %s and %s, currently: %s", min, max, value);
@@ -200,7 +192,7 @@ public class ConfigValueChecker<T> {
 	 * Requires that the value is an integer less than or equal to the specified
 	 * value.
 	 */
-	public ConfigValueChecker<T> requireIntegerMax(int max) {
+	public ValueChecker<T> requireIntegerMax(int max) {
 		return requireInteger().check(value -> {
 			if ((Integer) value > max) {
 				fail("value must be an integer less than or equal to %s, currently: $s", max, value);
@@ -211,11 +203,8 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Requires that the value is an integer greater than or equal to the
 	 * specified value.
-	 * 
-	 * @param min
-	 * @return
 	 */
-	public ConfigValueChecker<T> requireIntegerMin(int min) {
+	public ValueChecker<T> requireIntegerMin(int min) {
 		return requireInteger().check(value -> {
 			if ((Integer) value < min) {
 				fail("value must be an integer greater than or equal to %s, currently: %s", min, value);
@@ -226,7 +215,7 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Requires that the value is a string and matches the given regex.
 	 */
-	public ConfigValueChecker<T> requireMatch(String regex) {
+	public ValueChecker<T> requireMatch(String regex) {
 		return requireMatch(regex, String.format("value must match %s, currently: %s", regex, value));
 	}
 
@@ -234,7 +223,7 @@ public class ConfigValueChecker<T> {
 	 * This method does the same as {@link #requireMatch(String)}, but lets you
 	 * specify a more specific exception message.
 	 */
-	public ConfigValueChecker<T> requireMatch(String regex, String customExceptionMessage) {
+	public ValueChecker<T> requireMatch(String regex, String customExceptionMessage) {
 		Objects.requireNonNull(regex, "regex cannot be null");
 		Objects.requireNonNull(customExceptionMessage, "custom exception message cannot be null");
 		return check(value -> {
@@ -247,7 +236,7 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Requires that the value is an integer greater than zero.
 	 */
-	public ConfigValueChecker<T> requireNaturalInteger() {
+	public ValueChecker<T> requireNaturalInteger() {
 		return requireInteger().check(value -> {
 			if ((Integer) value > 0) {
 				fail("value must be an integer greater than zero, currently: %s", value);
@@ -258,7 +247,7 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Requires that the value is a negative integer.
 	 */
-	public ConfigValueChecker<T> requireNegativeInteger() {
+	public ValueChecker<T> requireNegativeInteger() {
 		return requireInteger().check(value -> {
 			if ((Integer) value < 0) {
 				fail("value must be a negative integer, currently: %s", value);
@@ -269,7 +258,7 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Requires that the value is a string with a length greater than zero.
 	 */
-	public ConfigValueChecker<T> requireNonEmptyString() {
+	public ValueChecker<T> requireNonEmptyString() {
 		return requireString().check(value -> {
 			if (((String) value).isEmpty()) {
 				fail("value must be a non-empty string");
@@ -280,7 +269,7 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Requires that the value is not in the given collection.
 	 */
-	public ConfigValueChecker<T> requireNot(Collection<T> values) {
+	public ValueChecker<T> requireNot(Collection<T> values) {
 		Objects.requireNonNull(values, "list of values cannot be null");
 		return check(value -> {
 			if (values.contains(value)) {
@@ -292,7 +281,7 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Requires that the value is not in the given array.
 	 */
-	public ConfigValueChecker<T> requireNot(Object... values) {
+	public ValueChecker<T> requireNot(Object... values) {
 		Objects.requireNonNull(values, "list of values cannot be null");
 		return requireNot(Arrays.asList(values));
 	}
@@ -300,7 +289,7 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Requires that the value is an integer greater than or equal to zero.
 	 */
-	public ConfigValueChecker<T> requirePositiveInteger() {
+	public ValueChecker<T> requirePositiveInteger() {
 		return requireInteger().check(value -> {
 			if ((Integer) value >= 0) {
 				fail("value must be positive integer, currently: %s", value);
@@ -311,24 +300,27 @@ public class ConfigValueChecker<T> {
 	/**
 	 * Explicitly requires that the value is a {@link String}.
 	 */
-	private ConfigValueChecker<T> requireString() {
+	private ValueChecker<T> requireString() {
 		return requireType(String.class);
 	}
 
 	/**
-	 * Requires that the value is an instance of every class in the given array.
+	 * Requires that the value is assignable from every class specified.
 	 */
-	public ConfigValueChecker<T> requireType(Class<?>... types) {
+	public ValueChecker<T> requireType(Class<?>... types) {
 		Objects.requireNonNull(types, "list of types cannot be null");
 		return requireType(Arrays.asList(types));
 	}
 
 	/**
-	 * Requires that the value is an instance of every class in the given
+	 * Requires that the value is assignable from every class in the given
 	 * collection.
 	 */
-	public ConfigValueChecker<T> requireType(Collection<Class<?>> types) {
+	public ValueChecker<T> requireType(Collection<Class<?>> types) {
 		Objects.requireNonNull(types, "list of types cannot be null");
+		for (Class<?> type : types) {
+			Objects.requireNonNull(type, "a class cannot be null");
+		}
 		return checkAgainst(types, (value, type) -> {
 			if (!value.getClass().isAssignableFrom(type)) {
 				fail("value must be of type %s, currently: %s", type, value.getClass());
@@ -337,10 +329,9 @@ public class ConfigValueChecker<T> {
 	}
 
 	/**
-	 * Sets the value this checker should perform checks on and resets it to not
-	 * allow {@code null}-values.
+	 * Resets the checker and sets the new value.
 	 */
-	void setValue(T value) {
+	public void setValue(T value) {
 		nullAllowed = false;
 		this.value = value;
 	}

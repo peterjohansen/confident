@@ -1,8 +1,7 @@
-package com.actram.configent;
+package com.actram.configent.config;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -15,10 +14,18 @@ public class Config {
 	private final Map<String, Supplier<?>> defaultValues = new HashMap<>();
 
 	Config(Map<String, ConfigEntry<?>> entries, Map<String, Supplier<?>> defaultValues) {
-		Objects.requireNonNull(entries, "entries cannot be null");
-		Objects.requireNonNull(defaultValues, "default values suppliers cannot be null");
+		assert entries != null : "entries cannot be null";
+		assert defaultValues != null : "default value suppliers cannot be null";
 		this.entries.putAll(entries);
 		this.defaultValues.putAll(defaultValues);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T getDefault(String key) {
+		if (!defaultValues.containsKey(key)) {
+			throw new IllegalArgumentException("no config entry with key: " + key);
+		}
+		return (T) defaultValues.get(key).get();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -27,13 +34,6 @@ public class Config {
 			throw new IllegalArgumentException("no config entry with key: " + key);
 		}
 		return (T) entries.get(key).cast();
-	}
-	
-	public <T> T getDefault(String key) {
-		if (!defaultValues.containsKey(key)) {
-			throw new IllegalArgumentException("no config entry with key: " + key);
-		}
-		return defaultValues.get(key).get();
 	}
 
 	/**
