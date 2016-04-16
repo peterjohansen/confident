@@ -1,8 +1,6 @@
 package com.actram.configent.config;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 /**
  *
@@ -10,36 +8,35 @@ import java.util.function.Supplier;
  * @author Peter André Johansen
  */
 public class Config {
-	private final Map<String, ConfigEntry<?>> entries = new HashMap<>();
-	private final Map<String, Supplier<?>> defaultValues = new HashMap<>();
+	private final Map<String, ConfigItem> items;
 
-	Config(Map<String, ConfigEntry<?>> entries, Map<String, Supplier<?>> defaultValues) {
-		assert entries != null : "entries cannot be null";
-		assert defaultValues != null : "default value suppliers cannot be null";
-		this.entries.putAll(entries);
-		this.defaultValues.putAll(defaultValues);
+	Config(Map<String, ConfigItem> items) {
+		assert items != null : "items cannot be null";
+		assert !items.keySet().contains(null) : "an item cannot be null";
+		this.items = items;
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T getDefault(String key) {
-		if (!defaultValues.containsKey(key)) {
-			throw new IllegalArgumentException("no config entry with key: " + key);
-		}
-		return (T) defaultValues.get(key).get();
+		return (T) getItem(key).createDefault();
+	}
+
+	private ConfigItem getItem(String key) {
+		return items.get(key);
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T getValue(String key) {
 		if (!hasEntry(key)) {
-			throw new IllegalArgumentException("no config entry with key: " + key);
+			throw new IllegalArgumentException("no config item with key: " + key);
 		}
-		return (T) entries.get(key).cast();
+		return (T) items.get(key).getValue();
 	}
 
 	/**
 	 * @return whether the config has an entry with the given key
 	 */
 	public boolean hasEntry(String key) {
-		return entries.containsKey(key);
+		return items.containsKey(key);
 	}
 }

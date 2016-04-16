@@ -26,13 +26,13 @@ import java.util.function.Predicate;
  * An example of a custom check to ensure the value is an even integer:
  * 
  * <pre>
- * 	check(value -> {
- * 		requireInteger();
- * 		final int n = (Integer) value;
- * 		if (n % 2 != 0) {
- * 			fail("value must be an even integer: " + n);
- * 		}
- * 	});
+ * check(value -> {
+ * 	requireInteger();
+ * 	final int n = (Integer) value;
+ * 	if (n % 2 != 0) {
+ * 		fail("value must be an even integer: " + n);
+ * 	}
+ * });
  * </pre>
  * 
  * @author Peter André Johansen
