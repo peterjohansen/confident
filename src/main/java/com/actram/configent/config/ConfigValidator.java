@@ -10,13 +10,13 @@ import com.actram.configent.ValueChecker;
  *
  * @author Peter André Johansen
  */
-public interface ConfigValidator<T> {
+public interface ConfigValidator {
 
 	/**
 	 * Checks the value in the specified checker to ensure that it is valid.
 	 * 
 	 * @throws IllegalValueException if the specified object is invalid
 	 */
-	public void validate(ValueChecker<T> checker) throws IllegalValueException;
+	public void validate(ValueChecker<Object> checker) throws IllegalValueException;
 
 }
